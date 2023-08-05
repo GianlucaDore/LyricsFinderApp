@@ -1,0 +1,79 @@
+.stay_sticky
+{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: center;
+    align-items: center;
+    column-gap: 5%;
+    margin-top: 2%;
+}
+
+.made_by
+{
+    flex: 1;
+    text-align: right;
+}
+
+.powered_by
+{
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.powered_by_header
+{
+    text-align: left;
+}
+
+.logos_container
+{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    justify-content: stretch;
+}
+
+.musixmatch_logo_container, .spotify_logo_container
+{
+    max-width: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.musixmatch_logo_container
+{
+    flex: 1;
+    background-color: #ff5353;
+    justify-content: center;
+}
+
+.spotify_logo_container
+{
+    flex: 1;
+    background-color: #1db954;
+    justify-content: center;
+}
+
+#github_logo
+{
+    max-width: 18%;
+}
+
+#linkedin_logo
+{
+    max-width: 18%;
+}
+
+#musixmatch_logo
+{
+    width: 100%;
+    max-height: 100px;
+}
+
+#spotify_logo
+{
+    max-height: 100px;
+}

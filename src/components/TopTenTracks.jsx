@@ -9,8 +9,11 @@ export const TopTenTracks = () =>
     const topTenTracks = useSelector(getTopTenTracks);
 
     return (
-        <div className="topTenTracks">
-            { topTenTracks.map((track) => {return <TrackPreview data={track} key={track.id}/>}) }
-        </div>
+        <>
+            <h1 id="top10tracksitalyheader">Top 10 popular tracks in Italy</h1>
+            <div className="toptentracks">
+                { topTenTracks.map((track) => {return <TrackPreview data={track} key={track.id}/>}) }
+            </div>
+        </>  
     );
 }
