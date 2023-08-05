@@ -1,0 +1,96 @@
+.toptentracks
+{
+    display: flex;
+    margin-top: 50px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    column-gap: 15%;
+}
+
+.track_preview
+{
+    position: relative;
+    width: 15%;
+    margin-bottom: 2.6%;
+    border: 2px solid #ff5353;
+    border-radius: 10px;
+    padding: 6px;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    background-color: #f9f9f9;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+}
+
+.track_preview_topline
+{
+    text-align: center;
+    background-color: #ff5353;
+    color: white;
+    padding: 5px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    flex: 1;
+}
+
+.track_preview_bottomline
+{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    padding: 3px;
+}
+
+.track_id 
+{
+    display: flex;
+    margin-left: auto;
+    align-items: center; /* Center the track ID vertically */
+    font-size: 14px; /* Increase the font size for better visibility */
+    color: #777; /* Add a more subtle color for the track ID */
+}
+
+.genre_label 
+{
+    top: 5px;
+    left: 70px; /* Adjust the left value to control the label's position */
+    padding: 2px 8px;
+    background-color: #ff5353;
+    color: white;
+    font-size: 12px;
+    border-radius: 5px;
+}
+
+.track_preview_favorites
+{
+    align-self: flex-end;
+}
+
+.album_icon
+{
+    max-width: 50px;
+    margin: 0 auto;
+}
+
+.heart_icon
+{
+    max-width: 20px;
+}
+
+.star_icon
+{
+    max-width: 20px;
+}
+
+#top10tracksitalyheader
+{
+    width: 100%;
+    color: #ff5353;
+    background-image: linear-gradient(to right, green, white, red);
+    text-align: center;
+    padding: 15px 0;
+    margin: 0;
+}

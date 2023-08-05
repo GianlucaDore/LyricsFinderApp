@@ -1,7 +1,9 @@
 import React, { useEffect } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import { turnOnSpinner } from "../redux/lyricsSlice";
+import { fetchAsyncLyrics, getSpinnerStatus, getTrackLyrics, turnOnSpinner } from "../redux/lyricsSlice";
+import { Footer } from "../components/Footer";
+import { ClipLoader } from 'react-spinners';
 
 export const TrackLyrics = () =>
 {
@@ -11,11 +13,14 @@ export const TrackLyrics = () =>
 
     const dispatch= useDispatch();
 
+    const isLoading = useSelector(getSpinnerStatus);
+    const trackLyrics = useSelector(getTrackLyrics);
+
     useEffect(() => {
         
         dispatch(turnOnSpinner());
 
-        // dispatch(retrieveTrackLyrics(urlParams.id));
+        dispatch(fetchAsyncLyrics(urlParams.id));
 
         /* return () => {
             dispatch(removeTrackLyrics());
@@ -24,9 +29,9 @@ export const TrackLyrics = () =>
     }, [dispatch])
 
     return (
-        <div className="TrackLyrics">
-
-
+        <div className="tracklyrics">
+            {!!isLoading} ? {<ClipLoader color={'black'} loader={isLoading} size={150} />} : {<p className="track_lyrics">{trackLyrics.lyrics}</p>}
+            <Footer position="stay_sticky" />
         </div>
     );
 }
