@@ -5,10 +5,9 @@ import { Footer } from "../components/Footer";
 import { LyricsFinderSearch } from "../components/LyricsFinderSearch";
 import "../css/Home.css"
 import { useDispatch } from "react-redux";
-import { getSpinnerStatus } from "../redux/lyricsSlice";
 import { ClipLoader } from 'react-spinners';
 import { useSelector } from "react-redux";
-import { turnOnSpinner, fetchAsyncTracks, removeTopTenTracks } from "../redux/lyricsSlice";
+import { getSpinnerStatus, turnOnSpinner, fetchAsyncTracks, removeTopTenTracks } from "../redux/lyricsSlice";
 
 export const Home = () =>
 {
@@ -19,6 +18,7 @@ export const Home = () =>
     useEffect(() => {
 
         dispatch(turnOnSpinner());
+        
         dispatch(fetchAsyncTracks());
 
         return () =>
@@ -32,9 +32,9 @@ export const Home = () =>
     return (
         <div id="Home">
             <LyricsFinderSearch />
+            {!!isLoading ? null : <TopTenTracks />}
             <ClipLoader color={"black"} loading={isLoading} size={150} />
-            <TopTenTracks />
-            <Footer position="stay_sticky"/>
+            {!!isLoading ? <Footer position="stay_fixed" /> : <Footer position="stay_sticky" />}
         </div>
     );
 }

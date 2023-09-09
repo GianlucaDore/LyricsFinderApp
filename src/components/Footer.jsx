@@ -1,5 +1,5 @@
 import React from "react";
-import musiXmatchLogo from '../images/MusiXmatchLogo.svg';
+import musiXmatchLogo from '../images/MusiXmatchLogo_White.png';
 import spotifyLogo from '../images/SpotifyLogo.png';
 import linkedinicon from '../images/linkedin_icon.png';
 import githubicon from '../images/aicon.png'

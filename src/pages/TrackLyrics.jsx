@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
-import { fetchAsyncLyrics, getSpinnerStatus, getTrackLyrics, turnOnSpinner } from "../redux/lyricsSlice";
+import { fetchAsyncLyrics, getSpinnerStatus, getTrackLyrics, turnOnSpinner, removeLyrics } from "../redux/lyricsSlice";
 import { Footer } from "../components/Footer";
 import { ClipLoader } from 'react-spinners';
 
@@ -22,11 +22,9 @@ export const TrackLyrics = () =>
 
         dispatch(fetchAsyncLyrics(urlParams.id));
 
-        /* return () => {
-            dispatch(removeTrackLyrics());
-        } */
+        return () => { dispatch(removeLyrics()); }
 
-    }, [dispatch])
+    }, [dispatch]); // Clean-up function.
 
     return (
         <div className="tracklyrics">

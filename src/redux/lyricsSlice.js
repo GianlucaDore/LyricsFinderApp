@@ -1,18 +1,22 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { redirect } from 'react-router-dom';
+import SpotifyWebApi from 'spotify-web-api-node';
 
+const spotifyAPI = new SpotifyWebApi({
+    clientId : "f8ff3bd286194f5cb43d8e0399b03fe2",
+    clientSecret : "d4bc95700f894de28a78bd3972ea5360"
+});
 
 export const fetchAsyncTracks = createAsyncThunk('lyrics/fetchAsyncTracks',
     async () =>
     {
         const htmlquery = "chart.tracks.get?chart_name=top&page=1&page_size=10&country=it&f_has_lyrics=1"
         const apikey = "4c1ba2ca3c12e38d88e4b8d38b05f5d3"
-        const response = await fetch(encodeURI('https://cors-anywhere.herokuapp.com/https://api.musixmatch.com/ws/1.1/' + htmlquery + '&apikey=' + apikey), {
+
+        /* Now we'll fetch the top 10 tracks chart for Italy from Musixmatch. */
+        const response = await fetch(encodeURI('https://api.musixmatch.com/ws/1.1/' + htmlquery + '&apikey=' + apikey), {
             "method" : 'GET',
-            "headers" : {
-                            'Cache-Control' : "no-cache",
-                            'Content-Type' : "application/json"
-                        }
+            "headers" : {}
         });
 
         if (!response.ok)
@@ -20,68 +24,165 @@ export const fetchAsyncTracks = createAsyncThunk('lyrics/fetchAsyncTracks',
             console.log("Call response not ok!");
             return(redirect("/notfound"));
         }
-        else
-            return response.json();
+        
+        const res = await response.json();
+
+        const retrievedTracks = [];
+        for (const t of res.message.body.track_list)
+        {
+            retrievedTracks.push({
+                id : t.track.commontrack_id,
+                name : t.track.track_name,
+                rating : t.track.track_rating,
+                favorites : t.track.num_favourite,
+                artist : t.track.artist_name,
+                genre : (t.track.primary_genres.music_genre_list[0] ? (t.track.primary_genres.music_genre_list[0].music_genre.music_genre_name) : ("Unknown"))
+            });
+        }
+
+        /* As of now, we're lacking the album covers. We have to resort to Spotify's APIs to get them: */
+
+        const spotifyAPIToken = await fetchSpotifyAPIToken(); // Retrieve the needed token to call the Spotify API.
+
+        const albumsArray = await fetchChartAlbumCovers(spotifyAPIToken, retrievedTracks);  // Call the Spotify API that returns a set of albums' infos, as well as their cover arts.
+
+        return { retrievedTracks, albumsArray };
+
     }
 );
 
-/* API call to retrieve the album cover for the homepage -- ACTUALLY BUGGED ON MUSIXMATCH'S SIDE */
-export const fetchChartAlbumCovers = createAsyncThunk('lyrics/fetchChartAlbumCovers',
-    async (trackIDArray) =>
-    {
-        const apikey = "4c1ba2ca3c12e38d88e4b8d38b05f5d3"
-        let globalResponse = await Promise.all([
-            fetch('https://cors-anywhere.herokuapp.com/https://api.musixmatch.com/ws/1.1/track.get?commontrack_id=' + trackIDArray[0] + '&apikey=' + apikey).json()
-                .then((res) => fetch('https://cors-anywhere.herokuapp.com/https://api.musixmatch.com/ws/1.1/album.get?album_id=' + res.message.body.track.album_id + '&apikey=' + apikey)),
-            fetch('https://cors-anywhere.herokuapp.com/https://api.musixmatch.com/ws/1.1/track.get?commontrack_id=' + trackIDArray[1] + '&apikey=' + apikey).json()
-                .then((res) => fetch('https://cors-anywhere.herokuapp.com/https://api.musixmatch.com/ws/1.1/album.get?album_id=' + res.message.body.track.album_id + '&apikey=' + apikey)),
-            fetch('https://cors-anywhere.herokuapp.com/https://api.musixmatch.com/ws/1.1/track.get?commontrack_id=' + trackIDArray[2] + '&apikey=' + apikey).json()
-                .then((res) => fetch('https://cors-anywhere.herokuapp.com/https://api.musixmatch.com/ws/1.1/album.get?album_id=' + res.message.body.track.album_id + '&apikey=' + apikey)),
-            fetch('https://cors-anywhere.herokuapp.com/https://api.musixmatch.com/ws/1.1/track.get?commontrack_id=' + trackIDArray[3] + '&apikey=' + apikey).json()
-                .then((res) => fetch('https://cors-anywhere.herokuapp.com/https://api.musixmatch.com/ws/1.1/album.get?album_id=' + res.message.body.track.album_id + '&apikey=' + apikey)),
-            fetch('https://cors-anywhere.herokuapp.com/https://api.musixmatch.com/ws/1.1/track.get?commontrack_id=' + trackIDArray[4] + '&apikey=' + apikey).json()
-                .then((res) => fetch('https://cors-anywhere.herokuapp.com/https://api.musixmatch.com/ws/1.1/album.get?album_id=' + res.message.body.track.album_id + '&apikey=' + apikey)),
-            fetch('https://cors-anywhere.herokuapp.com/https://api.musixmatch.com/ws/1.1/track.get?commontrack_id=' + trackIDArray[5] + '&apikey=' + apikey).json()
-                .then((res) => fetch('https://cors-anywhere.herokuapp.com/https://api.musixmatch.com/ws/1.1/album.get?album_id=' + res.message.body.track.album_id + '&apikey=' + apikey)),
-            fetch('https://cors-anywhere.herokuapp.com/https://api.musixmatch.com/ws/1.1/track.get?commontrack_id=' + trackIDArray[6] + '&apikey=' + apikey).json()
-                .then((res) => fetch('https://cors-anywhere.herokuapp.com/https://api.musixmatch.com/ws/1.1/album.get?album_id=' + res.message.body.track.album_id + '&apikey=' + apikey)),
-            fetch('https://cors-anywhere.herokuapp.com/https://api.musixmatch.com/ws/1.1/track.get?commontrack_id=' + trackIDArray[7] + '&apikey=' + apikey).json()
-                .then((res) => fetch('https://cors-anywhere.herokuapp.com/https://api.musixmatch.com/ws/1.1/album.get?album_id=' + res.message.body.track.album_id + '&apikey=' + apikey)),
-            fetch('https://cors-anywhere.herokuapp.com/https://api.musixmatch.com/ws/1.1/track.get?commontrack_id=' + trackIDArray[8] + '&apikey=' + apikey).json()
-                .then((res) => fetch('https://cors-anywhere.herokuapp.com/https://api.musixmatch.com/ws/1.1/album.get?album_id=' + res.message.body.track.album_id + '&apikey=' + apikey)),
-            fetch('https://cors-anywhere.herokuapp.com/https://api.musixmatch.com/ws/1.1/track.get?commontrack_id=' + trackIDArray[9] + '&apikey=' + apikey).json()
-                .then((res) => fetch('https://cors-anywhere.herokuapp.com/https://api.musixmatch.com/ws/1.1/album.get?album_id=' + res.message.body.track.album_id + '&apikey=' + apikey))
-        ]);
+/* API call to retrieve a valid Spotify token to make use of their API. */
+async function fetchSpotifyAPIToken()
+{
+        const CLIENT_ID = "f8ff3bd286194f5cb43d8e0399b03fe2";
+        const CLIENT_SECRET = "d4bc95700f894de28a78bd3972ea5360";
 
-        const blobsArray = await globalResponse.then(async (res) => {
+        const token = await fetch('https://accounts.spotify.com/api/token', {
+            "method" : "POST",
+            "headers" : {
+                            'Content-Type' : 'application/x-www-form-urlencoded'
+                        },
+            "body" : 'grant_type=client_credentials&client_id=' + CLIENT_ID + '&client_secret=' + CLIENT_SECRET
+        })
+        .then(res => res.json());
 
-            let response = await Promise.all([
-                fetch(res[0].message.body.album.album_coverart_100x100).blob(),
-                fetch(res[1].message.body.album.album_coverart_100x100).blob(),
-                fetch(res[2].message.body.album.album_coverart_100x100).blob(),
-                fetch(res[3].message.body.album.album_coverart_100x100).blob(),
-                fetch(res[4].message.body.album.album_coverart_100x100).blob(),
-                fetch(res[5].message.body.album.album_coverart_100x100).blob(),
-                fetch(res[6].message.body.album.album_coverart_100x100).blob(),
-                fetch(res[7].message.body.album.album_coverart_100x100).blob(),
-                fetch(res[8].message.body.album.album_coverart_100x100).blob(),
-                fetch(res[9].message.body.album.album_coverart_100x100).blob()
-            ]);
+        return token.access_token;
+}
 
-            return response;
+/* API call to retrieve the album cover for the tracks in homepage */
+async function fetchChartAlbumCovers(spotifyAPIToken, tracksArray)
+{
+        const mXmapikey = "4c1ba2ca3c12e38d88e4b8d38b05f5d3";
+        spotifyAPI.setAccessToken(spotifyAPIToken);
 
-            /* 
-            const chartCovers = [];
-            for (b of res)
-            {
-                const coverArt = await fetch(b.message.body.album.album_coverart_100x100).blob();
-                chartCovers.push(coverArt);
-            }  */
+        const commontrackIDArray = []; // commontrack_id is the mXm payload field universal track identifier in their database.
+
+        tracksArray.forEach(t => {
+            commontrackIDArray.push(t.id);
         });
 
-        return blobsArray;
+        const trackPromises = commontrackIDArray.map((trackID) =>
+            fetch(`https://api.musixmatch.com/ws/1.1/track.get?commontrack_id=${trackID}&apikey=${mXmapikey}`)
+            .then((res) => res.json())
+            .then((res) =>
+              fetch(`https://api.musixmatch.com/ws/1.1/album.get?album_id=${res.message.body.track.album_id}&apikey=${mXmapikey}`)
+                .then((res) => res.json())
+                 )   
+        );
+
+        // fetch()es above make the network requests, we have to wait for those Promises to resolve/reject before continuing. We await all of them:
+        let globalResponse = await Promise.all(trackPromises).catch(err => {console.error("One or more promises when retrieving data from MusixMatch with Promise.all() were rejected: ", err)});  // At this point, we should have all the responses from the album_get API from Musixmatch.
+
+        /* Curiously enough, even though there is no more the "album_cover_art" field, there is a field that returns the Spotify's album_id for that Musixmatch's album_id ! */
+        /* We then proceed to fetch the album cover art from Spotify using such field in the mXm response payload. */
+
+        /* Just a note: we MUST handle the case in which a MusiXmatch track does NOT have a corresponding album ID on Spotify. */ 
+        const retrievedAlbumsFromMxmNotFoundOnSpotify = [];
+        const retrievedAlbumIdsArray = globalResponse.map((i) => {
+                if (i.message.body.album.external_ids.spotify[0] !== undefined)  
+                            return i.message.body.album.external_ids.spotify[0];
+                else  // If the track fetched from mXm has not a corresponding Spotify album, we'll use the album infos provided by mXm, with a placeholder for the album cover.
+                {
+                    retrievedAlbumsFromMxmNotFoundOnSpotify.push({
+                        album_name: i.message.body.album.album_name,
+                        album_year: i.message.body.album.album_release_date.substring(0, 4),
+                        album_cover: "musixmatchDefaultAlbumLogo",
+                    });
+                    return null;
+                }
+        });                                          
+
+        /* This wrapper makes the API call to Spotify with the just retrieved Spotify album IDs (or null if absent). */
+        const res = await spotifyAPI.getAlbums(retrievedAlbumIdsArray).then((data) => { return data.body }).catch(err => {console.error("There was a problem while retrieving album data from Spotify: " + err)});
+
+        let i=0;
+        let arrayAlbums = []; // Time to compose the array for the albums retrieved, with both data and album cover (or a placeholder if not found on Spotify).
+        for (const a of res.albums) // res contains the results of the query to Spotify's album DB.
+        {
+            if (a !== null)
+            {
+                arrayAlbums.push({
+                    album_name: a.name,
+                    album_year: a.release_date.substring(0,4),
+                    album_cover: a.images[1].url
+                });
+            }
+                
+            else  // If the wrapper spotifyAPI didn't find (.getAlbums() may have returned null values) the album infos on Spotify for the specified track, we'll assign the mXm album infos instead.
+            {
+                arrayAlbums.push(retrievedAlbumsFromMxmNotFoundOnSpotify[i]);
+                i++;
+            }
+        }
+
+        return arrayAlbums;
+
+}
+
+export const fetchAsyncSearchedTracks = createAsyncThunk('lyrics/fetchAsyncSearchedTracks',
+    async ({word, page}) =>
+    {
+        /* SEARCHING FOR SPECIFIC TRACKS */
+
+        /* We'll first make use of MusixMatch's API's search function. */
+        const actualPage = page+1;
+        const htmlquery = "track.search?q_track_artist=" + word + "&page_size=9&page=" + actualPage + "&s_track_rating=desc";
+        const mXmapikey = "4c1ba2ca3c12e38d88e4b8d38b05f5d3";
+        const response = await fetch(encodeURI('https://api.musixmatch.com/ws/1.1/' + htmlquery + '&apikey=' + mXmapikey), {
+            "method" : 'GET',
+            "headers" : {}    
+        });
+
+        if (!response.ok)
+        {
+            console.log("Call response not ok!");
+            return(redirect("/notfound"));
+        }
+
+        const res = await response.json();
+
+        const retrievedTracks = [];
+        for (const t of res.message.body.track_list) // Parsing the response of the track.search function
+        {
+            retrievedTracks.push({
+                id : t.track.commontrack_id,
+                name : t.track.track_name,
+                rating : t.track.track_rating,
+                favorites : t.track.num_favourite,
+                artist : t.track.artist_name,
+                genre : (t.track.primary_genres.music_genre_list[0] ? (t.track.primary_genres.music_genre_list[0].music_genre.music_genre_name) : ("Unknown"))
+            });
+        }
+
+        /* Time to get the searched tracks' album covers from Spotify. */
+        const spotifyAPIToken = await fetchSpotifyAPIToken(); // Retrieve the needed token to call the Spotify API.
+        const albumsArray = await fetchChartAlbumCovers(spotifyAPIToken, retrievedTracks)
+            .catch(err => console.error("Promise fetchChartAlbumCovers was rejected: " + err));  // Call the Spotify API that returns a set of albums' infos, as well as their cover arts.
+
+
+        return { retrievedTracks, albumsArray, word, actualPage };
     }
-);
+)
 
 export const fetchAsyncLyrics = createAsyncThunk('lyrics/fetchAsyncLyrics',
     async (url) =>
@@ -90,10 +191,7 @@ export const fetchAsyncLyrics = createAsyncThunk('lyrics/fetchAsyncLyrics',
         const apikey = "4c1ba2ca3c12e38d88e4b8d38b05f5d3"
         const response = await fetch(encodeURI('https://cors-anywhere.herokuapp.com/https://api.musixmatch.com/ws/1.1/' + htmlquery + url + '&apikey=' + apikey), {
             "method" : 'GET',
-            "headers" : {
-                            'Cache-Control' : "no-cache",
-                            'Content-Type' : "application/json"
-                        }
+            "headers" : {}
         });
 
         if (!response.ok)
@@ -111,8 +209,12 @@ const initialState =
 {
     topTenTracks: [],
     currentLyrics: null,
+    tracksMatchingSearch: [],
+    searchedString: "",
+    pageNumber: 0,
     isLoading: false
 }
+
 
 export const lyricsSlice = createSlice({
     name: 'lyrics',
@@ -126,6 +228,18 @@ export const lyricsSlice = createSlice({
         },
         removeTopTenTracks: (state) => {
             state.topTenTracks = [];
+        },
+        removeTracksMatchingSearch: (state) => {
+            state.tracksMatchingSearch = [];
+        },
+        resetPageNumber: (state) => {
+            state.pageNumber = 0;
+        },
+        resetSearchedString: (state) => {
+            state.searchedString = "";
+        },
+        removeLyrics: (state) => {
+            state.currentLyrics = null;
         }
     },
     extraReducers: {
@@ -137,20 +251,50 @@ export const lyricsSlice = createSlice({
         },
         [fetchAsyncTracks.fulfilled] : (state, res) => {
             console.log("Top 10 tracks were successfully retrieved.");
-            const retrievedTracks = [];
-            /* We now explore the response */ 
-            for (const t of res.payload.message.body.track_list)
+
+            const topTenTracksAndAlbums = [];
+            for (let i=0; i<res.payload.retrievedTracks.length; i++)
             {
-                retrievedTracks.push({
-                    id : t.track.track_id,
-                    name : t.track.track_name,
-                    rating : t.track.track_rating,
-                    favorites : t.track.num_favourite,
-                    artist : t.track.artist_name,
-                    genre : (t.track.primary_genres.music_genre_list[0] ? (t.track.primary_genres.music_genre_list[0].music_genre.music_genre_name) : ("Unknown"))
-                });
+                let obj = {data: null, album: null};
+                if (res.payload.retrievedTracks[i] === (null || undefined ))
+                    break;
+                if (res.payload.albumsArray[i] === (null || undefined ))
+                    break;
+                else
+                {
+                    obj.data = res.payload.retrievedTracks[i];
+                    obj.album = res.payload.albumsArray[i];
+                    topTenTracksAndAlbums.push(obj);
+                }
             }
-            return ({...state, isLoading: false, topTenTracks: retrievedTracks});
+
+            return ({...state, isLoading: false, topTenTracks: topTenTracksAndAlbums});
+        },
+        [fetchAsyncSearchedTracks.pending] : () => {
+            console.log("Promise fetchAsyncSearchedTracks is pending.");
+        },
+        [fetchAsyncSearchedTracks.rejected] : (_, action) => {
+            console.log("Promise fetchAsyncSearchedTracks was rejected: " + action.payload);
+        },
+        [fetchAsyncSearchedTracks.fulfilled] : (state, res) => {
+            console.log("Search results were successfully retrieved.");
+
+            let word = res.payload.word;
+            let actualPage = res.payload.actualPage;
+
+            let searchResults = []
+            if (actualPage > 1) 
+                { searchResults = [...state.tracksMatchingSearch]; }
+
+            for (let i=0; i<res.payload.retrievedTracks.length; i++)
+            {
+                let obj = {data: null, album: null};
+                obj.data = res.payload.retrievedTracks[i];
+                obj.album = res.payload.albumsArray[i];
+                searchResults.push(obj);
+            }
+
+            return ({...state, isLoading: false, searchedString: word, pageNumber: actualPage, tracksMatchingSearch: searchResults});
         },
         [fetchAsyncLyrics.pending] : () => {
             console.log("Promise fetchAsyncLyrics is pending.");
@@ -171,7 +315,10 @@ export const lyricsSlice = createSlice({
 
 export const getTopTenTracks = (state) => state.lyrics.topTenTracks;
 export const getSpinnerStatus = (state) => state.lyrics.isLoading;
+export const getSearchResults = (state) => state.lyrics.tracksMatchingSearch;
+export const getSearchedString = (state) => state.lyrics.searchedString;
+export const getPageNumber = (state) => state.lyrics.pageNumber;
 export const getTrackLyrics = (state) => state.lyrics.currentLyrics;
 
-export const { turnOnSpinner, turnOffSpinner, removeTopTenTracks } = lyricsSlice.actions;
+export const { turnOnSpinner, turnOffSpinner, removeTopTenTracks, removeTracksMatchingSearch, resetPageNumber, resetSearchedString, removeLyrics } = lyricsSlice.actions;
 export default lyricsSlice.reducer;
