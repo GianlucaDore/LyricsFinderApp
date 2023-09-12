@@ -8,12 +8,13 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { Home } from './pages/Home';
 import { TrackLyrics } from './pages/TrackLyrics';
 import { NotFound } from './pages/NotFound';
+import { SearchResults } from './pages/SearchResults';
 
 const container = document.getElementById('root');
 const root = createRoot(container);
 
 root.render(
-  <React.StrictMode>
+    <React.StrictMode>
       <Provider store={store}>
         <BrowserRouter>
           <Routes>
@@ -22,10 +23,13 @@ root.render(
               <Route index element={ <NotFound /> } />
               <Route path=":id" element={ <TrackLyrics /> } />
             </Route>
+            <Route path="/search" element={ <SearchResults /> } />
           </Routes>
         </BrowserRouter>
       </Provider>
-  </React.StrictMode>
+    </React.StrictMode>
+      
+  
 );
 
 // If you want to start measuring performance in your app, pass a function

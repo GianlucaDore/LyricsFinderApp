@@ -1,7 +1,8 @@
 import React from "react";
 import hearticon from "../images/heart_icon.png";
 import staricon from "../images/star_icon.png";
-import musixmatchicon from "../images/Musixmatch_icon.svg";
+// import musixmatchicon from "../images/Musixmatch_icon.svg";
+import musixmatchDefaultAlbumCover from '../images/MusiXmatchLogo_WhiteBck_RedM.png';
 
 export const TrackPreview = (props) =>
 {
@@ -12,9 +13,9 @@ export const TrackPreview = (props) =>
                 <h5 className="track_preview_artist">{props.data.artist}</h5>
             </div>
             
-            <p className="track_preview_genre">Genre: <span className="genre_label">{props.data.genre}</span></p>
-            <h6 className="track_preview_album">Album: </h6>
-            <img className="album_icon" alt="album_cover" src={musixmatchicon} />
+            <h6 className="track_preview_genre">Genre: <span className="genre_label">{props.data.genre}</span></h6>
+            <h6 className="track_preview_album">Album: {props.album.album_name} [{props.album.album_year}]</h6>
+            <img className="album_icon" alt="album_cover" src={props.album.album_cover === "musixmatchDefaultAlbumLogo" ? musixmatchDefaultAlbumCover : props.album.album_cover} title={props.album.album_cover === "musixmatchDefaultAlbumLogo" ? "Album cover not found" : props.album.album_name}/>
             <div className="track_preview_bottomline">
                 <div>
                     <img className="heart_icon" src={hearticon} alt="Favorites" />
