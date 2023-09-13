@@ -19,17 +19,13 @@ root.render(
         <BrowserRouter>
           <Routes>
             <Route exact path='/' element={ <Home /> } />
-            <Route path="/track">
-              <Route index element={ <NotFound /> } />
-              <Route path=":id" element={ <TrackLyrics /> } />
-            </Route>
+            <Route path="/track" element={ <TrackLyrics /> }/>
             <Route path="/search" element={ <SearchResults /> } />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </Provider>
     </React.StrictMode>
-      
-  
 );
 
 // If you want to start measuring performance in your app, pass a function

@@ -32,6 +32,7 @@ export const fetchAsyncTracks = createAsyncThunk('lyrics/fetchAsyncTracks',
         {
             retrievedTracks.push({
                 id : t.track.commontrack_id,
+                lyrics_id : t.track.track_id,
                 name : t.track.track_name,
                 rating : t.track.track_rating,
                 favorites : t.track.num_favourite,
@@ -122,6 +123,7 @@ async function fetchChartAlbumCovers(spotifyAPIToken, tracksArray)
             if (a !== null)
             {
                 arrayAlbums.push({
+                    album_spotify_id: a.id,
                     album_name: a.name,
                     album_year: a.release_date.substring(0,4),
                     album_cover: a.images[1].url
@@ -166,6 +168,7 @@ export const fetchAsyncSearchedTracks = createAsyncThunk('lyrics/fetchAsyncSearc
         {
             retrievedTracks.push({
                 id : t.track.commontrack_id,
+                lyrics_id : t.track.track_id,
                 name : t.track.track_name,
                 rating : t.track.track_rating,
                 favorites : t.track.num_favourite,
@@ -185,11 +188,14 @@ export const fetchAsyncSearchedTracks = createAsyncThunk('lyrics/fetchAsyncSearc
 )
 
 export const fetchAsyncLyrics = createAsyncThunk('lyrics/fetchAsyncLyrics',
-    async (url) =>
+    async ({mxm_track_id, mxm_commontrack_id, spotify_album_id}) =>
     {
+        /* FETCHING DATA FOR THE TrackLyrics COMPONENT */
+
+        /* First things first: let's retrieve the lyrics body for the track from MusiXmatch. */
         const htmlquery = "track.lyrics.get?track_id="
         const apikey = "4c1ba2ca3c12e38d88e4b8d38b05f5d3"
-        const response = await fetch(encodeURI('https://cors-anywhere.herokuapp.com/https://api.musixmatch.com/ws/1.1/' + htmlquery + url + '&apikey=' + apikey), {
+        const response = await fetch(encodeURI('https://api.musixmatch.com/ws/1.1/' + htmlquery + mxm_track_id + '&apikey=' + apikey), {
             "method" : 'GET',
             "headers" : {}
         });
@@ -199,8 +205,88 @@ export const fetchAsyncLyrics = createAsyncThunk('lyrics/fetchAsyncLyrics',
             console.log("Call response not ok!");
             return(redirect("/notfound"));
         }
-        else
-            return response.json();
+        
+        const res = await response.json();
+
+        const retrievedLyrics = res.message.body.lyrics.lyrics_body;  // Retrieving lyrics' body.
+        
+        /* Now it's time to retrieve some other data to display a captivating page for the TrackLyrics component. */
+
+        /* Let's retrieve the album name and cover from Spotify, for example. */
+        const spotifyAPIToken = await fetchSpotifyAPIToken(); // Retrieve the needed token to call the Spotify API.
+        spotifyAPI.setAccessToken(spotifyAPIToken);
+        
+        const spotifyAlbumData = await spotifyAPI.getAlbum(spotify_album_id).then((data) => { return data.body }).catch(err => {console.error("Error while retrieving Album info from Spotify (fetchTrackLyrics): " + err)});
+
+        /*  The above API call to Spotify album DB does return a tracklist for the selected album. 
+            But, in order to make a quick link to the lyrics for each single track in the track list, it's better to retrieve such tracklist from Musixmatch, 
+            so we can retrieve aswell each track_id and we can link the user to the lyrics of each specific track in the list with a simple Link element.
+            After all, there's no way to get the mXm's track ID from the Spotify API album call to then call the TrackLyrics component again. 
+            We have to make two API calls to Musixmatch:
+            1) track.get , getting track details by commontrack_id to retrieve the mXm album_id;
+            2) album.tracks.get , getting album's tracklist by mXm album_id . */
+
+        /* Let's start by fetching the the track details and then extrapolating the album_id of mXm : */
+        const response2 = await fetch(encodeURI('https://api.musixmatch.com/ws/1.1/track.get?commontrack_id=' + mxm_commontrack_id + '&apikey=' + apikey), {
+            "method" : 'GET',
+            "headers" : {}
+        });
+
+        if (!response2.ok)
+        {
+            console.log("Call response not ok!");
+            return(redirect("/notfound"));
+        }
+
+        const res2 = await response2.json(); 
+
+        const mxm_album_id = res2.message.body.track.album_id;
+
+        /* Now that we have the mXm album_id , we can fetch the tracklist from mXm : */
+        const response3 = await fetch(encodeURI('https://api.musixmatch.com/ws/1.1/album.tracks.get?album_id=' + mxm_album_id + '&apikey=' + apikey), {
+            "method" : 'GET',
+            "headers" : {}
+        });
+
+        if (!response3.ok)
+        {
+            console.log("Call response not ok!");
+            return(redirect("/notfound"));
+        }
+
+        const res3 = await response3.json();
+        const trackList = res3.message.body.track_list;  // This should be an array. Later we'll merge the tracklist to the spotify album data we retrieved.
+
+        /* Now we fill the tracklist array with the data we need: */
+        const albumTrackList = [];
+        let i=1;  // Since mXm API doesn't provide the tracks' position in the album, we'll assume the response contains the tracks in order.
+        for (const t of trackList)
+        {
+            const trackListElementObj = {
+                track_number: i,
+                track_name: t.track.track_name,
+                mxm_track_id: t.track.track_id,
+                mxm_commontrack_id: t.track.commontrack_id,
+                spotify_album_id: spotify_album_id
+            };
+        
+            albumTrackList.push(trackListElementObj);
+            i++;
+        }    
+
+        /* We then proceed to build the Object albumData that we need to pass to the extraReducer to put in the store. */
+        /* We've declared spotifyAlbumData above already, and it should now contain the body of the API call to spotify.getAlbum(). */
+        /* Let's make use of such data, while integrating them with the tracklist data from mXm, so we can pass a single album object to the reducer: */
+        const albumData = {
+            currentAlbumName: spotifyAlbumData.name,
+            currentAlbumType: spotifyAlbumData.album_type,
+            currentAlbumYear: spotifyAlbumData.release_date.substring(0,4),
+            currentAlbumCover: spotifyAlbumData.images[0].url,
+            currentAlbumTrackList: albumTrackList
+        };
+
+        /* We can now give the lyrics data and the album data to the extraReducer of competence! */
+        return ( { trackLyrics: retrievedLyrics, albumData: albumData });
     }
 )
 
@@ -208,10 +294,26 @@ export const fetchAsyncLyrics = createAsyncThunk('lyrics/fetchAsyncLyrics',
 const initialState =
 {
     topTenTracks: [],
-    currentLyrics: null,
-    tracksMatchingSearch: [],
-    searchedString: "",
-    pageNumber: 0,
+    currentLyrics: {
+        currentTrackLyrics: null,
+        currentTrackData: {
+            currentTrackName: null,
+            currentTrackLikes: 0,
+            currentTrackRating: 0
+        },
+        currentTrackAlbum: {
+            currentAlbumName: null,
+            currentAlbumType: null,
+            currentAlbumYear: null,
+            currentAlbumCover: null,
+            currentAlbumTrackList: []
+        }
+    },
+    searchResults: {
+        tracksMatchingSearch: [],
+        searchedString: "",
+        pageNumber: 0,
+    },
     isLoading: false
 }
 
@@ -226,17 +328,22 @@ export const lyricsSlice = createSlice({
         turnOffSpinner: (state) => {
             state.isLoading = false;
         },
+        setTrackDataForTrackLyricsComponent: (state, res) => {
+            state.currentLyrics.currentTrackData = {
+                currentTrackName: res.payload.track_name,
+                currentTrackLikes: res.payload.track_likes,
+                currentTrackRating: res.payload.track_rating,
+            }
+        },
         removeTopTenTracks: (state) => {
             state.topTenTracks = [];
         },
-        removeTracksMatchingSearch: (state) => {
-            state.tracksMatchingSearch = [];
-        },
-        resetPageNumber: (state) => {
-            state.pageNumber = 0;
-        },
-        resetSearchedString: (state) => {
-            state.searchedString = "";
+        removeSearchedTracks: (state) => {
+            state.searchResults = {
+                tracksMatchingSearch: [],
+                searchedString: "",
+                pageNumber: 0
+            };
         },
         removeLyrics: (state) => {
             state.currentLyrics = null;
@@ -279,46 +386,57 @@ export const lyricsSlice = createSlice({
         [fetchAsyncSearchedTracks.fulfilled] : (state, res) => {
             console.log("Search results were successfully retrieved.");
 
+            /* Setting up the new state object fields (2/3). */
             let word = res.payload.word;
             let actualPage = res.payload.actualPage;
 
-            let searchResults = []
+            /* Setting up the new state object fields (3/3). */
+            let tracksMatchingSearch = []
             if (actualPage > 1) 
-                { searchResults = [...state.tracksMatchingSearch]; }
+                { tracksMatchingSearch = [...state.searchResults.tracksMatchingSearch]; }
 
             for (let i=0; i<res.payload.retrievedTracks.length; i++)
             {
                 let obj = {data: null, album: null};
                 obj.data = res.payload.retrievedTracks[i];
                 obj.album = res.payload.albumsArray[i];
-                searchResults.push(obj);
+                tracksMatchingSearch.push(obj);
             }
 
-            return ({...state, isLoading: false, searchedString: word, pageNumber: actualPage, tracksMatchingSearch: searchResults});
+            /* Creating a new state object to update with a different ref as usual in Redux. */
+            const searchResults = {
+                tracksMatchingSearch: tracksMatchingSearch,
+                searchedString: word,
+                pageNumber: actualPage
+            };
+
+            return ({...state, isLoading: false, searchResults: searchResults});
         },
         [fetchAsyncLyrics.pending] : () => {
             console.log("Promise fetchAsyncLyrics is pending.");
         },
-        [fetchAsyncLyrics.rejected] : () => {
-            console.log("Promise fetchAsyncLyrics was rejected.");
+        [fetchAsyncLyrics.rejected] : (_, action) => {
+            console.err("Promise fetchAsyncLyrics was rejected: " + action.payload);
         },
         [fetchAsyncLyrics.fulfilled] : (state, res) => {
-            console.log("Requested track lyrics were successfully retrieved.");
-            const retrievedLyrics = {'lyrics' : null};
-            /* We now explore the response */
-            retrievedLyrics.lyrics = res.payload.message.body.lyrics.lyrics_body;
+            console.log("Requested track lyrics and album data were successfully retrieved.");
 
-            return ({...state, isLoading: false, currentLyrics: retrievedLyrics});
+            const albumData = res.payload.albumData;
+            const trackLyrics = res.payload.trackLyrics;
+
+            /* The field currentTrackData will be filled by another reducer invoked by another action, since when the user clicks on the TrackPreview he wants to display the lyrics of,
+               TrackPreview card itself already contains all track data. To dodge another fetch for data that we already have at the step before, we make the button of the TrackPreview
+               card dispatch an action that inserts the trackData in the store for the TrackPreview card clicked on.
+               So, we only update the Object currentLyrics partially (the track data will be filled by another reducer) : */
+            return ({...state, isLoading: false, currentLyrics: {...state.currentLyrics, currentTrackLyrics: trackLyrics, currentTrackAlbum: albumData}}); 
         }
     }
 });
 
 export const getTopTenTracks = (state) => state.lyrics.topTenTracks;
 export const getSpinnerStatus = (state) => state.lyrics.isLoading;
-export const getSearchResults = (state) => state.lyrics.tracksMatchingSearch;
-export const getSearchedString = (state) => state.lyrics.searchedString;
-export const getPageNumber = (state) => state.lyrics.pageNumber;
+export const getSearchResults = (state) => state.lyrics.searchResults;
 export const getTrackLyrics = (state) => state.lyrics.currentLyrics;
 
-export const { turnOnSpinner, turnOffSpinner, removeTopTenTracks, removeTracksMatchingSearch, resetPageNumber, resetSearchedString, removeLyrics } = lyricsSlice.actions;
+export const { turnOnSpinner, turnOffSpinner, setTrackDataForTrackLyricsComponent, removeTopTenTracks, removeSearchedTracks, removeLyrics } = lyricsSlice.actions;
 export default lyricsSlice.reducer;

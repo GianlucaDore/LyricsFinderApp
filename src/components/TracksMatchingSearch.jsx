@@ -8,7 +8,7 @@ export const TracksMatchingSearch = () =>
 {
     const searchResults = useSelector(getSearchResults);
 
-    const searchInput = useSelector(getSearchedString);
+    const searchInput = useSelector(getSearchResults).searchedString;
 
     return (
         <>
