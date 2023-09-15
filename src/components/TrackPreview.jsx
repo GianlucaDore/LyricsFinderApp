@@ -16,7 +16,7 @@ export const TrackPreview = (props) =>
             <Link
                     to={`/track?mxm_track_id=${props.data.lyrics_id}&mxm_commontrack_id=${props.data.id}&spfy_album_id=${props.album.album_spotify_id}`} // Set up your route accordingly
                     className="track_preview_topline"
-                    onClick={() => {dispatch(setTrackDataForTrackLyricsComponent({track_name: props.data.name, track_likes: props.data.favorites, track_rating: props.data.rating}));}}
+                    onClick={() => {dispatch(setTrackDataForTrackLyricsComponent({track_name: props.data.name, track_likes: props.data.favorites, track_rating: props.data.rating, track_artist: props.data.artist, track_genre: props.data.genre, track_album: props.album.album_name}));}}
             >
                 <h3 className="track_preview_name">{props.data.name}</h3>
                 <h5 className="track_preview_artist">{props.data.artist}</h5>

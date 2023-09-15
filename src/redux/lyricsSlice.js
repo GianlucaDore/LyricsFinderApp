@@ -42,13 +42,10 @@ export const fetchAsyncTracks = createAsyncThunk('lyrics/fetchAsyncTracks',
         }
 
         /* As of now, we're lacking the album covers. We have to resort to Spotify's APIs to get them: */
-
         const spotifyAPIToken = await fetchSpotifyAPIToken(); // Retrieve the needed token to call the Spotify API.
-
         const albumsArray = await fetchChartAlbumCovers(spotifyAPIToken, retrievedTracks);  // Call the Spotify API that returns a set of albums' infos, as well as their cover arts.
 
         return { retrievedTracks, albumsArray };
-
     }
 );
 
@@ -208,7 +205,11 @@ export const fetchAsyncLyrics = createAsyncThunk('lyrics/fetchAsyncLyrics',
         
         const res = await response.json();
 
-        const retrievedLyrics = res.message.body.lyrics.lyrics_body;  // Retrieving lyrics' body.
+        let retrievedLyrics = res.message.body.lyrics.lyrics_body;  // Retrieving lyrics' body.
+        if (retrievedLyrics.includes("*******"))
+        {
+            retrievedLyrics = retrievedLyrics.split("*******")[0];  // Let's get rid of the disclaimer for now; we'll include it manually in a different style/font.
+        }
         
         /* Now it's time to retrieve some other data to display a captivating page for the TrackLyrics component. */
 
@@ -226,7 +227,7 @@ export const fetchAsyncLyrics = createAsyncThunk('lyrics/fetchAsyncLyrics',
             1) track.get , getting track details by commontrack_id to retrieve the mXm album_id;
             2) album.tracks.get , getting album's tracklist by mXm album_id . */
 
-        /* Let's start by fetching the the track details and then extrapolating the album_id of mXm : */
+        /* Let's start by fetching the track details and then extrapolating the album_id of mXm : */
         const response2 = await fetch(encodeURI('https://api.musixmatch.com/ws/1.1/track.get?commontrack_id=' + mxm_commontrack_id + '&apikey=' + apikey), {
             "method" : 'GET',
             "headers" : {}
@@ -298,6 +299,8 @@ const initialState =
         currentTrackLyrics: null,
         currentTrackData: {
             currentTrackName: null,
+            currentTrackArtist: null,
+            currentTrackGenre: null,
             currentTrackLikes: 0,
             currentTrackRating: 0
         },
@@ -331,6 +334,8 @@ export const lyricsSlice = createSlice({
         setTrackDataForTrackLyricsComponent: (state, res) => {
             state.currentLyrics.currentTrackData = {
                 currentTrackName: res.payload.track_name,
+                currentTrackArtist: res.payload.track_artist,
+                currentTrackGenre: res.payload.track_genre,
                 currentTrackLikes: res.payload.track_likes,
                 currentTrackRating: res.payload.track_rating,
             }
@@ -416,7 +421,7 @@ export const lyricsSlice = createSlice({
             console.log("Promise fetchAsyncLyrics is pending.");
         },
         [fetchAsyncLyrics.rejected] : (_, action) => {
-            console.err("Promise fetchAsyncLyrics was rejected: " + action.payload);
+            console.error("Promise fetchAsyncLyrics was rejected: " + action.payload);
         },
         [fetchAsyncLyrics.fulfilled] : (state, res) => {
             console.log("Requested track lyrics and album data were successfully retrieved.");
@@ -424,8 +429,8 @@ export const lyricsSlice = createSlice({
             const albumData = res.payload.albumData;
             const trackLyrics = res.payload.trackLyrics;
 
-            /* The field currentTrackData will be filled by another reducer invoked by another action, since when the user clicks on the TrackPreview he wants to display the lyrics of,
-               TrackPreview card itself already contains all track data. To dodge another fetch for data that we already have at the step before, we make the button of the TrackPreview
+            /* The field currentTrackData will be filled by another reducer invoked by another action, since when the user clicks on the TrackPreview that he wants to display the lyrics of,
+               TrackPreview card itself already contains all track data. To spare another fetch for data that we already have got from the step before, we make the button of the TrackPreview
                card dispatch an action that inserts the trackData in the store for the TrackPreview card clicked on.
                So, we only update the Object currentLyrics partially (the track data will be filled by another reducer) : */
             return ({...state, isLoading: false, currentLyrics: {...state.currentLyrics, currentTrackLyrics: trackLyrics, currentTrackAlbum: albumData}}); 

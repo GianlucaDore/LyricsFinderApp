@@ -43,3 +43,22 @@
     font-size: 16px;
     cursor: pointer;
 }
+
+
+/* Now we'll proceed to add a media query to 
+   make the LyricsFinder header stand above
+   the search form. */
+@media screen and (max-width: 509px) 
+{
+    .lyricsfindersearch 
+    {
+        flex-direction: column; 
+        align-items: flex-start; 
+        padding-top: 10px; 
+    }
+
+    .search_lyrics_form 
+    {
+        margin: 10px 0; 
+    }
+}

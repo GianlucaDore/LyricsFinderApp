@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { TrackPreview } from './TrackPreview';
 import { useSelector } from 'react-redux';
-import { getSearchResults, getSearchedString } from '../redux/lyricsSlice';
+import { getSearchResults, removeSearchedTracks } from '../redux/lyricsSlice';
 
 
 export const TracksMatchingSearch = () =>
@@ -14,8 +14,8 @@ export const TracksMatchingSearch = () =>
         <>
           <h1 id="search_results_header">Search results for "{searchInput}":</h1>
             <div className="searchresults">
-                {!!searchResults.length ? 
-                    (searchResults.map((track) => {return <TrackPreview data={track.data} key={track.data.id} album={track.album}/> }))
+                {!!searchResults.tracksMatchingSearch.length ? 
+                    (searchResults.tracksMatchingSearch.map((track) => {return <TrackPreview data={track.data} key={track.data.id} album={track.album}/> }))
                     : (<p>No results for your search.</p>) }
             </div>
         </>  

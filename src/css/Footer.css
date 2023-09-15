@@ -83,11 +83,131 @@
 
 #musixmatch_logo
 {
-    width: 100%;
     max-height: 100px;
 }
 
 #spotify_logo
 {
     max-height: 100px;
+}
+
+@media screen and (max-width: 1400px) 
+{
+    .stay_sticky, .stay_fixed 
+    {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .made_by 
+    {
+        flex: 0.3; 
+    }
+
+    .musixmatch_logo_container, .spotify_logo_container 
+    {
+        flex: 1;
+    }
+}
+
+@media screen and (max-width: 699px)
+{
+    .stay_sticky
+    {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        justify-content: center;
+        align-items: center;
+        column-gap: 5%;
+        margin-top: 3%;
+    }
+
+    .made_by
+    {
+        flex: 0.3;
+        align-self: flex-start; 
+    }
+
+    
+}
+
+@media screen and (max-width: 589px)
+{
+    .stay_sticky
+    {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        flex-wrap: nowrap; 
+        column-gap: 5%;
+        margin-top: 3%;
+    }
+
+    .made_by
+    {
+        flex: 0.3;
+        align-self: center;
+        text-align: center;
+    }
+
+    .logos_container
+    {
+        display: flex;
+        flex-direction: column;
+        justify-content: stretch;
+    }
+
+    #musixmatch_logo
+    {
+        width: 100%;
+        max-height: 100px;
+    }
+
+    #spotify_logo
+    {
+        width: 100%;
+        max-height: 100px;
+    }
+
+}
+
+@media screen and (min-width: 590px) and (max-width: 899px)
+{
+    .stay_sticky
+    {
+        width: 100%;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap; 
+        column-gap: 5%;
+        margin-top: 3%;
+    }
+
+    .made_by
+    {
+        flex: 0.3;
+        align-self: flex-start; 
+    }
+
+    .logos_container
+    {
+        display: flex;
+        flex-direction: column;
+        justify-content: stretch;
+    }
+
+    #musixmatch_logo
+    {
+        flex: 0.3;
+        max-height: 100px;
+    }
+
+    #spotify_logo
+    {
+        flex: 0.4;
+        max-height: 100px;
+    }
+
 }

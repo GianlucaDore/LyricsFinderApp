@@ -1,0 +1,170 @@
+.lyrics_and_track_data 
+{
+    display: flex;
+    flex-direction: column; 
+    align-items: center; 
+    margin: 20px;
+}
+
+.track_info 
+{
+    text-align: center;
+    padding: 10px;
+    margin-top: 0;
+}
+
+.track_title
+{
+    margin-top: 5px;
+}
+
+.album_and_lyrics
+{
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+}
+
+.album_info 
+{
+    flex: 1;
+    align-self: flex-start;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    margin-left: 10px; 
+    text-align: left;
+}
+
+.lyrics_body 
+{
+    flex: 3; 
+    text-align: center;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border: 2px solid #ff5353;
+    border-radius: 10px;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    margin-left: 10px; 
+}
+
+.lyrics_body_text
+{
+    text-align: center;
+    white-space: pre-line;  /* To preserve the \n characters in the lyrics as new lines. */
+    margin-bottom: 0;
+}
+
+.album_cover_image 
+{
+    max-width: 100px; 
+    margin: 0 auto;
+}
+
+.album_info_name
+{
+    margin-top: 10px;
+    margin-bottom: 0;
+}
+
+.album_info_year
+{
+    margin-top: 2px;
+}
+
+.tracklist_header 
+{
+    color: #ff5353;
+    margin-bottom: 10px;
+}
+
+.lyrics_rules
+{
+    color: red;
+    margin-top: 0;
+}
+
+.album_navlink
+{
+    font-family: Verdana, Geneva, Tahoma, sans-serif;
+    
+}
+
+.album_navlink.active
+{
+    font-family: Arial, Helvetica, sans-serif;
+    color: black;
+}
+
+ol 
+{
+    list-style-type: decimal;
+    padding: 0;
+    margin-left: 6%;
+}
+
+li 
+{
+    margin-bottom: 5px;
+    color: #555;
+}
+
+.lyrics_body_text 
+{
+    color: #555;
+}
+
+.track_likes_ratings
+{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 3px;
+}
+
+.heart_icon
+{
+    max-width: 20px;
+}
+
+.star_icon
+{
+    max-width: 20px;
+}
+
+
+
+@media screen and (max-width: 589px)
+{
+    .album_and_lyrics
+    {
+        display: flex;
+        flex-direction: column;
+        row-gap: 15px;
+        width: 100%;
+    }
+
+    .album_info 
+    {
+        width: 90%;
+        align-self: flex-start;
+        padding: 10px;
+        border-radius: 10px;
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        text-align: center;
+    }
+
+}
+
+@media screen and (min-width: 590px) and (max-width: 1100px)
+{
+    ol
+    {
+        text-align: center;
+        list-style-type: decimal;
+        padding: 0;
+        margin-left: 10%;  /* Trying to achieve pixel-perfect for the numbers in the list. */
+    }
+}
