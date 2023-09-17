@@ -21,7 +21,7 @@ export const TrackLyrics = () =>
         
         dispatch(turnOnSpinner());
 
-        dispatch(fetchAsyncLyrics({mxm_track_id: urlSearchParams.get("mxm_track_id"), mxm_commontrack_id: urlSearchParams.get("mxm_commontrack_id"), spotify_album_id: urlSearchParams.get("spfy_album_id")}));
+        dispatch(fetchAsyncLyrics({mxm_track_id: urlSearchParams.get("mxm_track_id"), mxm_commontrack_id: urlSearchParams.get("mxm_commontrack_id")}));
 
     }, [dispatch, urlSearchParams]);
 

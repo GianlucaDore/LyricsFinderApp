@@ -2,9 +2,13 @@ import React from "react";
 import { NavLink } from "react-router-dom";
 import hearticon from "../images/heart_icon.png";
 import staricon from "../images/star_icon.png";
+import { useDispatch } from "react-redux";
+import { setTrackDataForTrackLyricsComponent } from "../redux/lyricsSlice";
+import musixmatchDefaultAlbumCover from '../images/MusiXmatchLogo_WhiteBck_RedM.png';
 
 export const LyricsAndTrackData = (props) =>
 {
+    const dispatch = useDispatch();
 
     return (
         <div className="lyrics_and_track_data">
@@ -17,16 +21,26 @@ export const LyricsAndTrackData = (props) =>
 
             <div className="album_and_lyrics">
                 <div className="album_info">
-                    <img className="album_cover_image" src={props.albumData.currentAlbumCover} alt="Album Cover" />
+                    {  (props.albumData.currentAlbumCover  === "musixmatchDefaultAlbumLogo") 
+                     ? (<img className="album_cover_image" src={musixmatchDefaultAlbumCover} title="Album cover not found" alt="Album_cover_not_found" />)
+                     : (<img className="album_cover_image" src={props.albumData.currentAlbumCover} title={props.albumData.currentAlbumName} alt="Album_cover" />)
+                    }
                     <h3 className="album_info_name">{props.albumData.currentAlbumName}</h3>
                     <h5 className="album_info_year">[{props.albumData.currentAlbumYear}]</h5>
                     <h4 className="tracklist_header">Tracklist:</h4>
                     <ol>
                         {props.albumData.currentAlbumTrackList.map((t) => (
                             <li key={t.mxm_commontrack_id}>
-                                <NavLink to={`/track?mxm_track_id=${t.mxm_track_id}&mxm_commontrack_id=${t.mxm_commontrack_id}&spfy_album_id=${t.spotify_album_id}`} 
+                                <NavLink to={`/track?mxm_track_id=${t.mxm_track_id}&mxm_commontrack_id=${t.mxm_commontrack_id}`} 
                                     className="album_navlink"
-                                    activeClassName={() => null  }>
+                                    onClick={() => {dispatch(setTrackDataForTrackLyricsComponent({
+                                        track_name: t.track_name, 
+                                        track_likes: t.track_likes, 
+                                        track_rating: t.track_rating, 
+                                        track_artist: props.trackData.currentTrackArtist, 
+                                        track_genre: t.track_genre
+                                    }))}}
+                                >
                                     {t.track_name}
                                 </NavLink>
                             </li>
